@@ -3,7 +3,7 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 pub fn main() {
-    let lines = read_input("input/input_1.txt").unwrap();
+    let lines = read_input("inputs/input_1.txt").unwrap();
     let cal_sum: u32 = lines
         .filter_map(|line| line.ok())
         .map(|line| calibration_value(line.trim()))
@@ -12,8 +12,17 @@ pub fn main() {
 }
 
 fn calibration_value(line: &str) -> u32 {
-    let as_chars: Vec<_> = line.chars().collect();
-    0
+    let tens = first_digit(line.chars());
+    let ones = first_digit(line.chars().rev());
+    tens * 10 + ones
+}
+
+fn first_digit<T>(seq: T) -> u32
+where T: Iterator<Item = char> {
+    seq
+    .filter(|c| c.is_ascii_digit())
+    .nth(0).unwrap()
+    .to_digit(10).unwrap()
 }
 
 fn read_input<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
