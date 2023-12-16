@@ -21,11 +21,13 @@ struct Arguments {
 #[derive(Subcommand)]
 enum Op {
     Day1,
+    Day2,
 }
 
 fn main() {
     let args = Arguments::parse();
     match args.operation {
         Op::Day1 => day_1::main(),
+        Op::Day2 => day_2::main(),
     }
 }
