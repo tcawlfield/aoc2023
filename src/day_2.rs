@@ -15,7 +15,13 @@ pub fn main() {
     let lines = io::BufReader::new(file).lines();
     let lines = lines.map(|l| l.expect("Bad line!"));
     let id_sum = id_sum_possible(&elf_bag, lines);
-    println!("id_sum: {}", id_sum);
+    println!("id_sum: {id_sum}");
+
+    let file = File::open("inputs/input_2.txt").unwrap();
+    let lines = io::BufReader::new(file).lines();
+    let lines = lines.map(|l| l.expect("Bad line!"));
+    let power_sum = sum_powers(lines);
+    println!("power_sum: {power_sum}");
 }
 
 fn id_sum_possible<I>(elf_bag: &CubeSet, lines: I) -> i32
@@ -34,6 +40,22 @@ where
         }
     }
     id_sum
+}
+
+fn sum_powers<I>(lines: I) -> i32
+where
+    I: IntoIterator,
+    I::Item: Borrow<str>,
+{
+    let mut power_sum: i32 = 0;
+    for line in lines {
+        let g = Game::from_str(line.borrow());
+        if let Some(g) = g {
+            let min_bag = g.minimal_bag();
+            power_sum += min_bag.get_power();
+        }
+    }
+    power_sum
 }
 
 struct Game {
@@ -111,6 +133,10 @@ impl CubeSet {
             && self.num_green >= other.num_green
             && self.num_blue >= other.num_blue
     }
+
+    fn get_power(&self) -> i32 {
+        self.num_red * self.num_green * self.num_blue
+    }
 }
 
 #[cfg(test)]
@@ -155,5 +181,19 @@ mod tests {
         let id_sum = id_sum_possible(&elf_bag, EXAMPLE_1.lines());
         println!("test ID sum = {}", id_sum);
         assert_eq!(id_sum, 8);
+    }
+
+    #[test]
+    fn day_2() {
+        let results = vec![48, 12, 1560, 630, 36];
+        for (line, expected_result) in zip(EXAMPLE_1.lines(), results.iter()) {
+            let g = Game::from_str(line);
+            if let Some(g) = g {
+                let min_bag = g.minimal_bag();
+                assert_eq!(min_bag.get_power(), *expected_result);
+            }
+        }
+
+        assert_eq!(sum_powers(EXAMPLE_1.lines()), 2286);
     }
 }
