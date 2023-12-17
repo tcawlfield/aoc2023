@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 mod day_1;
 mod day_2;
-// mod day_3;
+mod day_3;
 // mod day_4;
 // mod day_5;
 // mod day_6;
@@ -22,6 +22,7 @@ struct Arguments {
 enum Op {
     Day1,
     Day2,
+    Day3,
 }
 
 fn main() {
@@ -29,5 +30,6 @@ fn main() {
     match args.operation {
         Op::Day1 => day_1::main(),
         Op::Day2 => day_2::main(),
+        Op::Day3 => day_3::main(),
     }
 }
