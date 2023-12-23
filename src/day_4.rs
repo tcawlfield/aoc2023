@@ -20,6 +20,10 @@ pub fn main() {
     }
     let point_ttl: usize = cards.iter().map(|c| c.score()).sum();
     println!("Part 1: Total points: {point_ttl}");
+
+    win_copies(&mut cards[..]);
+    let ttl_cards: usize = cards.iter().map(|c| c.copies).sum();
+    println!("Part 2: Total scratchcards: {ttl_cards}");
 }
 
 #[allow(dead_code)]
@@ -27,6 +31,7 @@ struct Card {
     num: usize,
     winning_nums: HashSet<usize>,
     have_nums: Vec<usize>,
+    copies: usize,
 }
 
 impl Card {
@@ -70,13 +75,14 @@ impl Card {
                 num,
                 winning_nums,
                 have_nums,
+                copies: 1,
             })
         } else {
             None
         }
     }
 
-    fn score(&self) -> usize {
+    fn num_matches(&self) -> i32 {
         let mut matches: i32 = 0;
         for num in self.have_nums.iter() {
             if self.winning_nums.contains(&num) {
@@ -84,10 +90,27 @@ impl Card {
                 // println!("{num} is a winning number!");
             }
         }
+        matches
+    }
+
+    fn score(&self) -> usize {
+        let matches = self.num_matches();
         if matches > 0 {
             2usize.pow((matches - 1) as u32)
         } else {
             0
+        }
+    }
+}
+
+fn win_copies(cards: &mut [Card]) {
+    for idx in 0..cards.len() {
+        let matches = cards[idx].num_matches() as usize;
+        for idx2 in idx+1 .. idx + matches + 1 {
+            if idx2 >= cards.len() {
+                break;
+            }
+            cards[idx2].copies += cards[idx].copies;
         }
     }
 }
@@ -109,6 +132,16 @@ mod tests {
         for (line, expected_score) in zip(EXAMPLE_1.lines(), results.iter()) {
             let card = Card::from_line(line).unwrap();
             assert_eq!(card.score(), *expected_score);
+        }
+    }
+
+    #[test]
+    fn test_copies() {
+        let results = vec![1, 2, 4, 8, 14, 1];
+        let mut cards: Vec<Card> = EXAMPLE_1.lines().filter_map(|l| Card::from_line(l)).collect();
+        win_copies(&mut cards[..]);
+        for (card, expected_count) in zip(cards, results) {
+            assert_eq!(card.copies, expected_count);
         }
     }
 }
