@@ -106,7 +106,7 @@ impl Card {
 fn win_copies(cards: &mut [Card]) {
     for idx in 0..cards.len() {
         let matches = cards[idx].num_matches() as usize;
-        for idx2 in idx+1 .. idx + matches + 1 {
+        for idx2 in idx + 1..idx + matches + 1 {
             if idx2 >= cards.len() {
                 break;
             }
@@ -138,7 +138,10 @@ mod tests {
     #[test]
     fn test_copies() {
         let results = vec![1, 2, 4, 8, 14, 1];
-        let mut cards: Vec<Card> = EXAMPLE_1.lines().filter_map(|l| Card::from_line(l)).collect();
+        let mut cards: Vec<Card> = EXAMPLE_1
+            .lines()
+            .filter_map(|l| Card::from_line(l))
+            .collect();
         win_copies(&mut cards[..]);
         for (card, expected_count) in zip(cards, results) {
             assert_eq!(card.copies, expected_count);

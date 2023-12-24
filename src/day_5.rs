@@ -1,7 +1,7 @@
+use crate::utils;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::borrow::Borrow;
-use crate::utils;
 
 const INPUT: &str = "inputs/input_5.txt";
 
@@ -42,7 +42,7 @@ impl Almanac {
         for line in lines {
             let line = line.borrow().trim();
             if line.is_empty() && map.is_some() {
-                maps.push(map.take().unwrap());  // blank lines separate mappings
+                maps.push(map.take().unwrap()); // blank lines separate mappings
                 continue;
             }
             if let Some(map) = &mut map {
@@ -59,7 +59,7 @@ impl Almanac {
             maps.push(map.take().unwrap());
         }
 
-        Some(Almanac{seeds, maps})
+        Some(Almanac { seeds, maps })
     }
 
     fn map_final(&self, id: usize) -> usize {
@@ -85,7 +85,7 @@ impl Map {
             static ref MAP_LINE_RE: Regex = Regex::new(r"^(\w+)-to-(\w+) map:$").unwrap();
         }
         let m = MAP_LINE_RE.captures(s)?;
-        Some(Map{
+        Some(Map {
             from_name: m.get(1).unwrap().as_str().to_owned(),
             to_name: m.get(2).unwrap().as_str().to_owned(),
             ranges: Vec::new(),
@@ -108,7 +108,7 @@ impl MapRange {
         if nums.len() != 3 {
             None
         } else {
-            Some(MapRange{
+            Some(MapRange {
                 dest_id: nums[0],
                 source_id: nums[1],
                 range_length: nums[2],
@@ -118,7 +118,7 @@ impl MapRange {
 
     fn map_from(&self, from_id: usize) -> Option<usize> {
         if from_id < self.source_id {
-            return None
+            return None;
         }
         let pos = from_id - self.source_id;
         if pos >= self.range_length {
