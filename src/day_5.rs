@@ -140,14 +140,17 @@ impl Map {
 
     fn find_map_ranges(&self, ranges: &[IDRange]) -> Vec<IDRange> {
         let mut mapped_ranges = Vec::new();
-        let mut unmapped_ranges = ranges.to_vec();  // copy
+        let mut unmapped_ranges = ranges.to_vec(); // copy
         let this_level = ranges[0].map_level;
         let mut new_ranges = Vec::new();
-        for map in self.ranges.iter() {  // Loop over this Map's MapRange's
+        for map in self.ranges.iter() {
+            // Loop over this Map's MapRange's
             new_ranges.clear();
-            for id_range in unmapped_ranges.iter() {  // Loop over input or leftover, unmapped ranges
+            for id_range in unmapped_ranges.iter() {
+                // Loop over input or leftover, unmapped ranges
                 let potential_ranges = map.map_range(&id_range);
-                for potential in potential_ranges { // Loop over the up-to-3 results
+                for potential in potential_ranges {
+                    // Loop over the up-to-3 results
                     if let Some(id_range) = potential {
                         if id_range.map_level > this_level {
                             // Taken care of by this mapping, so it's all done.
@@ -212,7 +215,8 @@ impl MapRange {
         // to find a way to simplify it.
 
         let mut mapped = [None; 3];
-        if (source_range.last() < self.source_id) || (source_range.start_id > self.last_source_id()) {
+        if (source_range.last() < self.source_id) || (source_range.start_id > self.last_source_id())
+        {
             // Easy -- source range is entirely outside our mapping range
             mapped[0] = Some(source_range.clone());
             return mapped;
@@ -223,14 +227,14 @@ impl MapRange {
         let source_range = if source_range.start_id < self.source_id {
             // Some of source_range is before the mapping.
             let head_length = self.source_id - source_range.start_id;
-            mapped[0] = Some(IDRange{
+            mapped[0] = Some(IDRange {
                 map_level: source_range.map_level, // not explicitly mapped
                 start_id: source_range.start_id,
                 length: head_length,
             });
-            IDRange{
+            IDRange {
                 map_level: source_range.map_level,
-                start_id: self.source_id, 
+                start_id: self.source_id,
                 length: source_range.length - head_length,
             }
         } else {
@@ -239,7 +243,7 @@ impl MapRange {
         if source_range.last() > self.last_source_id() {
             // Source range extends beyond this mapping.
             mapped[1] = Some(IDRange {
-                map_level: source_range.map_level+1, // Explicitly-mapped region -- advanced map_level to indicate this.
+                map_level: source_range.map_level + 1, // Explicitly-mapped region -- advanced map_level to indicate this.
                 start_id: self.map_from(source_range.start_id).unwrap(),
                 length: self.last_source_id() - source_range.start_id + 1,
             });
@@ -251,7 +255,7 @@ impl MapRange {
         } else {
             // Source range lies within this mapping.
             mapped[1] = Some(IDRange {
-                map_level: source_range.map_level+1, // Explicitly-mapped region -- advanced map_level to indicate this.
+                map_level: source_range.map_level + 1, // Explicitly-mapped region -- advanced map_level to indicate this.
                 start_id: self.map_from(source_range.start_id).unwrap(),
                 length: source_range.length,
             });
@@ -262,23 +266,27 @@ impl MapRange {
 
 impl IDRange {
     fn new(map_level: usize, start_id: usize, length: usize) -> IDRange {
-        IDRange{map_level, start_id, length}
+        IDRange {
+            map_level,
+            start_id,
+            length,
+        }
     }
 
-//     fn map_and_subdivide(&mut self, maps: &[Map]) {
-//         if self.map_level >= maps.len() {
-//             return;
-//         }
-//         let map = &maps[self.map_level];
-//         let mut subranges = Vec::new();
-// 
-//         subranges.extend(map.find_map_ranges(&self).iter());
-// 
-//         for subrange in subranges {
-//             subrange.map_and_subdivide(maps);
-//         }
-//         self.sub_ranges = Some(subranges);
-//     }
+    //     fn map_and_subdivide(&mut self, maps: &[Map]) {
+    //         if self.map_level >= maps.len() {
+    //             return;
+    //         }
+    //         let map = &maps[self.map_level];
+    //         let mut subranges = Vec::new();
+    //
+    //         subranges.extend(map.find_map_ranges(&self).iter());
+    //
+    //         for subrange in subranges {
+    //             subrange.map_and_subdivide(maps);
+    //         }
+    //         self.sub_ranges = Some(subranges);
+    //     }
 
     fn last(&self) -> usize {
         self.start_id + self.length - 1
@@ -350,44 +358,86 @@ mod tests {
     #[test]
     fn check_map_range_map_range() {
         let mr = MapRange::from_str("100 10 5").unwrap();
-        let to_mapped = IDRange{map_level: 1, start_id: 1, length: 2};
-        assert_eq!(
-            mr.map_range(&to_mapped),
-            [Some(to_mapped), None, None]
-        );
-        let to_mapped = IDRange{map_level: 1, start_id: 15, length: 2};
-        assert_eq!(
-            mr.map_range(&to_mapped),
-            [Some(to_mapped), None, None]
-        );
+        let to_mapped = IDRange {
+            map_level: 1,
+            start_id: 1,
+            length: 2,
+        };
+        assert_eq!(mr.map_range(&to_mapped), [Some(to_mapped), None, None]);
+        let to_mapped = IDRange {
+            map_level: 1,
+            start_id: 15,
+            length: 2,
+        };
+        assert_eq!(mr.map_range(&to_mapped), [Some(to_mapped), None, None]);
 
-        let to_mapped = IDRange{map_level: 1, start_id: 5, length: 15};
+        let to_mapped = IDRange {
+            map_level: 1,
+            start_id: 5,
+            length: 15,
+        };
         assert_eq!(
             mr.map_range(&to_mapped),
             [
-                Some(IDRange{map_level: 1, start_id: 5, length: 5}),
-                Some(IDRange{map_level: 2, start_id: 100, length: 5}),
-                Some(IDRange{map_level: 1, start_id: 15, length: 5}),
+                Some(IDRange {
+                    map_level: 1,
+                    start_id: 5,
+                    length: 5
+                }),
+                Some(IDRange {
+                    map_level: 2,
+                    start_id: 100,
+                    length: 5
+                }),
+                Some(IDRange {
+                    map_level: 1,
+                    start_id: 15,
+                    length: 5
+                }),
             ]
         );
 
-        let to_mapped = IDRange{map_level: 1, start_id: 5, length: 8};
+        let to_mapped = IDRange {
+            map_level: 1,
+            start_id: 5,
+            length: 8,
+        };
         assert_eq!(
             mr.map_range(&to_mapped),
             [
-                Some(IDRange{map_level: 1, start_id: 5, length: 5}),
-                Some(IDRange{map_level: 2, start_id: 100, length: 3}),
+                Some(IDRange {
+                    map_level: 1,
+                    start_id: 5,
+                    length: 5
+                }),
+                Some(IDRange {
+                    map_level: 2,
+                    start_id: 100,
+                    length: 3
+                }),
                 None,
             ]
         );
 
-        let to_mapped = IDRange{map_level: 1, start_id: 12, length: 8};
+        let to_mapped = IDRange {
+            map_level: 1,
+            start_id: 12,
+            length: 8,
+        };
         assert_eq!(
             mr.map_range(&to_mapped),
             [
                 None,
-                Some(IDRange{map_level: 2, start_id: 102, length: 3}),
-                Some(IDRange{map_level: 1, start_id: 15, length: 5}),
+                Some(IDRange {
+                    map_level: 2,
+                    start_id: 102,
+                    length: 3
+                }),
+                Some(IDRange {
+                    map_level: 1,
+                    start_id: 15,
+                    length: 5
+                }),
             ]
         );
     }
@@ -398,5 +448,4 @@ mod tests {
         let min_loc = a.min_loc_ranges();
         assert_eq!(min_loc, 46);
     }
-
 }
