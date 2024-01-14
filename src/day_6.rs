@@ -5,15 +5,23 @@ const INPUT: &str = "inputs/input_6.txt";
 
 pub fn main() {
     let file = File::open(INPUT).unwrap();
-    let mut lines = io::BufReader::new(file).lines();
-    let times: Vec<i32> = lines.next().unwrap().unwrap()
-        .split_whitespace().skip(1).map(|s| s.parse().unwrap()).collect();
-    let distances: Vec<i32> = lines.next().unwrap().unwrap()
-        .split_whitespace().skip(1).map(|s| s.parse().unwrap()).collect();
-    let ways_to_beat: Vec<i32> = times.iter().zip(distances.iter())
-    .map(|(t, d)| ways_to_beat(*t, *d)).collect();
+    let lines: Vec<String> = io::BufReader::new(file).lines().take(2).flatten().collect();
+    let times = line_to_ints(&lines[0]);
+    let distances = line_to_ints(&lines[1]);
+    let ways_to_beat: Vec<i32> = times
+        .iter()
+        .zip(distances.iter())
+        .map(|(t, d)| ways_to_beat(*t, *d))
+        .collect();
     let ttl_ways: i32 = ways_to_beat.iter().product();
     println!("Part 1: {ttl_ways} total ways to beat all records");
+}
+
+fn line_to_ints(line: &str) -> Vec<i32> {
+    line.split_whitespace()
+        .skip(1)
+        .map(|s| s.parse().unwrap())
+        .collect()
 }
 
 /*   Math:
@@ -52,7 +60,7 @@ fn ways_to_beat(duration: i32, record: i32) -> i32 {
         Bounds::Within(low, high) => {
             // println!("Can beat {duration} ms with record {record} mm between {low} and {high}");
             high.ceil() as i32 - low.floor() as i32 - 1
-        },
+        }
     }
 }
 
