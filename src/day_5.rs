@@ -48,7 +48,7 @@ impl Almanac {
         I::Item: Borrow<str>,
     {
         let mut lines = lines.into_iter();
-        let seeds = parse_seeds_line(lines.next().unwrap().borrow())?;
+        let seeds = parse_seeds_line(lines.next()?.borrow())?;
         lines.next()?;
         let mut maps = Vec::new();
         let mut map: Option<Map> = None;

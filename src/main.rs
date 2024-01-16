@@ -9,7 +9,7 @@ mod day_4;
 mod day_5;
 mod day_6;
 mod day_7;
-// mod day_8;
+mod day_8;
 // mod day_9;
 // mod day_10;
 
@@ -29,6 +29,7 @@ enum Op {
     Day5,
     Day6,
     Day7,
+    Day8,
 }
 
 fn main() {
@@ -41,5 +42,6 @@ fn main() {
         Op::Day5 => day_5::main(),
         Op::Day6 => day_6::main(),
         Op::Day7 => day_7::main(),
+        Op::Day8 => day_8::main(),
     }
 }
