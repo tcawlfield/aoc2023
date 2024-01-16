@@ -5,8 +5,14 @@ const INPUT: &str = "inputs/input_7.txt";
 
 pub fn main() {
     let mut hands = hands_from_file(utils::lines_in_file(INPUT)).unwrap();
-    let ttl_score = ttl_score(&mut hands);
-    println!("Part 1: total score is {ttl_score}");
+    let score = ttl_score(&mut hands);
+    println!("Part 1: total score is {score}");
+
+    for hand in hands.iter_mut() {
+        hand.jacks_to_jokers();
+    }
+    let score = ttl_score(&mut hands);
+    println!("Part 2: total score is {score}");
 }
 
 type Hands = Vec<Hand>;
@@ -67,6 +73,42 @@ impl Hand {
             | (self.cards[2] as u64) << 8
             | (self.cards[3] as u64) << 4
             | (self.cards[4] as u64);
+    }
+
+    fn jacks_to_jokers(&mut self) {
+        for c in self.cards.iter_mut() {
+            if *c == 11 {
+                *c = 1;
+            }
+        }
+        let joker_count = self.count_jokers();
+        self.typ = self.type_with_jokers(joker_count);
+        self.get_str_bits();
+    }
+
+    fn count_jokers(&self) -> i32 {
+        self.cards.iter().map(|c| if *c == 1 { 1 } else { 0 }).sum()
+    }
+
+    fn type_with_jokers(&self, joker_count: i32) -> HandType {
+        // Jokers can upgrade a hand type
+        match (self.typ, joker_count) {
+            (HandType::FiveOak, 5) => HandType::FiveOak,
+            (HandType::FourOak, 4) => HandType::FiveOak,
+            (HandType::FourOak, 1) => HandType::FiveOak,
+            (HandType::FullHouse, 3) => HandType::FiveOak,
+            (HandType::FullHouse, 2) => HandType::FiveOak,
+            (HandType::ThreeOak, 3) => HandType::FourOak,
+            (HandType::ThreeOak, 2) => HandType::FiveOak,
+            (HandType::ThreeOak, 1) => HandType::FourOak,
+            (HandType::TwoPair, 2) => HandType::FourOak,
+            (HandType::TwoPair, 1) => HandType::FullHouse,
+            (HandType::OnePair, 2) => HandType::ThreeOak,
+            (HandType::OnePair, 1) => HandType::ThreeOak,
+            (HandType::HighCard, 1) => HandType::OnePair,
+            (_, 0) => self.typ,
+            (_, _) => panic!("Can't rescore: {:?}, {}", self.typ, joker_count),
+        }
     }
 }
 
@@ -161,5 +203,20 @@ mod tests {
         assert_eq!(Hand::from_line("55555 1").unwrap().typ, HandType::FiveOak);
         assert_eq!(Hand::from_line("55255 1").unwrap().typ, HandType::FourOak);
         assert_eq!(Hand::from_line("12345 1").unwrap().typ, HandType::HighCard);
+    }
+
+    #[test]
+    fn test_pt2() {
+        let mut hands = hands_from_file(EXAMPLE.lines()).unwrap();
+        for hand in hands.iter_mut() {
+            hand.jacks_to_jokers();
+        }
+        assert_eq!(hands[0].typ, HandType::OnePair);
+        assert_eq!(hands[1].typ, HandType::FourOak);
+        assert_eq!(hands[2].typ, HandType::TwoPair);
+        assert_eq!(hands[3].typ, HandType::FourOak);
+        assert_eq!(hands[4].typ, HandType::FourOak);
+        let score = ttl_score(&mut hands);
+        assert_eq!(score, 5905);
     }
 }
