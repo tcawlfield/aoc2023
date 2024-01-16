@@ -7,12 +7,10 @@ use std::collections::HashMap;
 const INPUT: &str = "inputs/input_8.txt";
 
 pub fn main() {
-    let mut docs = Docs::from_file(utils::lines_in_file(INPUT)).unwrap();
+    let docs = Docs::from_file(utils::lines_in_file(INPUT)).unwrap();
     let steps = docs.steps_to_zzz();
     println!("Reaching ZZZ in {steps} steps");
 }
-
-type Code = [char; 3];
 
 struct Docs {
     // Using 0:u8 for L, and 1:u8 for R
@@ -36,9 +34,6 @@ impl Docs {
         let mut map = HashMap::new();
         for line in lines {
             let m = MAP_RE.captures(line.borrow()).unwrap();
-            // let key = str_to_code(m.get(1).unwrap().as_str());
-            // let left = str_to_code(m.get(2).unwrap().as_str());
-            // let right = str_to_code(m.get(3).unwrap().as_str());
             let key = m.get(1).unwrap().as_str().to_string();
             let left = m.get(2).unwrap().as_str().to_string();
             let right = m.get(3).unwrap().as_str().to_string();
@@ -52,7 +47,7 @@ impl Docs {
         let mut steps = 0;
         let mut loc = "AAA";
         let mut instructions = Box::new(self.instructions.iter());
-        while true {
+        loop {
             let direction = if let Some(i) = instructions.next() {
                 i
             } else {
@@ -78,10 +73,6 @@ fn parse_instructions(line: &str) -> Vec<u8> {
             _ => None,
         })
         .collect()
-}
-
-fn str_to_code(s: &str) -> Code {
-    s.chars().collect::<Vec<char>>().try_into().unwrap()
 }
 
 #[cfg(test)]
