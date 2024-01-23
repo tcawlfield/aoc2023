@@ -1,8 +1,10 @@
 use crate::utils;
 use lazy_static::lazy_static;
+use num::Integer;
 use regex::Regex;
 use std::borrow::Borrow;
 use std::collections::HashMap;
+// use std::num::Integer;
 
 const INPUT: &str = "inputs/input_8.txt";
 
@@ -66,9 +68,13 @@ impl Docs {
         steps
     }
 
-    fn steps_from_all_a_to_any_z(&self) -> i64 {
+    fn steps_from_all_a_to_any_z(&self) -> u64 {
         let mut steps = 0;
         let mut locs: Vec<&String> = self.map.keys().filter(|loc| loc.ends_with("A")).collect();
+        let mut paths: Vec<Path> = locs
+            .iter()
+            .map(|l| Path::new(l, locs.len() as u64))
+            .collect();
         let mut instructions = Box::new(self.instructions.iter());
         println!("Locs: {locs:?}");
         loop {
@@ -78,20 +84,31 @@ impl Docs {
                 *instructions = self.instructions.iter(); // go back through
                 instructions.next().unwrap() // there had better be a first direction to go
             };
-            for loc in locs.iter_mut() {
-                let paths = self.map.get(*loc).unwrap();
-                *loc = &paths[*direction as usize];
-            }
             steps += 1;
-            if steps % 1000000 == 0 {
-                let terminal_locs = locs.iter().filter(|loc| loc.ends_with("Z")).count();
-                println!("Step {steps}, Locs: {locs:?}, {terminal_locs} terminal.");
+            for (loc, path) in locs.iter_mut().zip(paths.iter_mut()) {
+                if !path.found_loop() {
+                    let lr = self.map.get(*loc).unwrap();
+                    *loc = &lr[*direction as usize];
+                    if loc.ends_with("Z") {
+                        path.at_xxz(loc, steps);
+                    }
+                }
             }
-            if locs.iter().all(|loc| loc.ends_with("Z")) {
+            if paths.iter().all(|p| p.found_loop()) {
                 break;
             }
         }
-        steps
+        for path in paths.iter() {
+            path.print_found();
+        }
+        let strides: Vec<u64> = paths
+            .iter()
+            .filter_map(|p| p.simplest_repetitions())
+            .collect();
+        if strides.len() == paths.len() {
+            return get_lcm(&strides);
+        }
+        panic!("Cannot handle anything but the very simplest repetive sequences.");
     }
 }
 
@@ -103,6 +120,91 @@ fn parse_instructions(line: &str) -> Vec<u8> {
             _ => None,
         })
         .collect()
+}
+
+fn get_lcm(strides: &[u64]) -> u64 {
+    strides.iter().fold(1, |acc, i| acc.lcm(i))
+}
+
+struct Path {
+    start: String,
+    xxzs: Vec<Terminal>, // steps from start when an ??Z node was visited
+    instr_len: u64,
+    loop_offset: u64, // 0 until a loop has been found
+    loop_length: u64, // ditto
+}
+
+struct Terminal {
+    step: u64,
+    instr: u64,
+    name: String,
+}
+
+impl Path {
+    fn new(start: &str, instr_len: u64) -> Path {
+        Path {
+            start: start.to_owned(),
+            xxzs: Vec::new(),
+            instr_len,
+            loop_length: 0,
+            loop_offset: 0,
+        }
+    }
+
+    // Returns true if a loop has been detected.
+    fn at_xxz(&mut self, loc: &str, step: u64) {
+        if self.found_loop() {
+            return;
+        }
+        let instr = step % self.instr_len;
+        println!(
+            "Path starting from {} reached {} on step {}, instruction {}",
+            self.start, loc, step, instr
+        );
+
+        // Check for a loop.
+        for xxz in self.xxzs.iter() {
+            if xxz.name == loc && xxz.instr == instr {
+                // Same place in instruction sequence as before
+                self.loop_length = step - xxz.step;
+                self.loop_offset = xxz.step;
+                println!("   We're looping!");
+                break; // Small optimization, makes me happier too.
+            }
+        }
+
+        self.xxzs.push(Terminal {
+            step,
+            instr,
+            name: loc.to_owned(),
+        });
+    }
+
+    fn found_loop(&self) -> bool {
+        self.loop_length != 0
+    }
+
+    fn print_found(&self) {
+        print!("Starting at {}:", self.start);
+        for xxz in self.xxzs.iter() {
+            print!(" {} step {} instr {},", xxz.name, xxz.step, xxz.instr);
+        }
+        println!();
+    }
+
+    fn simplest_repetitions(&self) -> Option<u64> {
+        let (first, remaining) = self.xxzs.split_first().unwrap();
+        if !remaining.iter().all(|xxz| first.name == xxz.name) {
+            return None;
+        }
+        let stride = self.xxzs[0].step;
+        for (idx, xxz) in self.xxzs.iter().enumerate().skip(1) {
+            if xxz.step != (idx as u64 + 1) * stride {
+                return None;
+            }
+        }
+        Some(stride)
+    }
 }
 
 #[cfg(test)]
