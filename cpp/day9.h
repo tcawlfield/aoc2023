@@ -48,7 +48,6 @@ namespace day9
                 // for (auto const &v : next_deltas)
                 //     cout << v << " ";
                 // cout << endl;
-                deltas.push_back(next_deltas);
                 bool all_zero = true;
                 for (auto &dx : next_deltas)
                 {
@@ -62,6 +61,7 @@ namespace day9
                 {
                     break;
                 }
+                deltas.push_back(next_deltas);
                 current_list = &deltas.back();
             }
             return deltas;
@@ -80,6 +80,20 @@ namespace day9
             }
             return seq.back() + dx;
         }
+
+        Int prev()
+        {
+            auto deltas = next_deltas();
+            Int dx = 0;
+            for (auto diffs = deltas.rbegin(); diffs != deltas.rend(); diffs++)
+            {
+                // for (auto const &v : *diffs)
+                //     cout << v << " ";
+                // cout << endl;
+                dx = diffs->front() - dx;
+            }
+            return seq.front() - dx;
+        }
     };
 
     int main()
@@ -89,15 +103,30 @@ namespace day9
         assert(Sequence::from_str("1 3 6 10 15 21").next() == 28);
         assert(Sequence::from_str("10  13  16  21  30  45").next() == 68);
 
-        ifstream file(INPUT);
-        string line;
-        Int ttl = 0;
-        while (getline(file, line))
         {
-            Sequence s = Sequence::from_str(line);
-            ttl += s.next();
+            ifstream file(INPUT);
+            string line;
+            Int ttl = 0;
+            while (getline(file, line))
+            {
+                Sequence s = Sequence::from_str(line);
+                ttl += s.next();
+            }
+            cout << "Part 1: " << ttl << endl;
         }
-        cout << "Part 1: " << ttl << endl;
+
+        assert(Sequence::from_str("10  13  16  21  30  45").prev() == 5);
+        {
+            ifstream file(INPUT);
+            string line;
+            Int ttl = 0;
+            while (getline(file, line))
+            {
+                Sequence s = Sequence::from_str(line);
+                ttl += s.prev();
+            }
+            cout << "Part 2: " << ttl << endl;
+        }
 
         return 0;
     }
